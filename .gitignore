@@ -1,0 +1,6 @@
+__pycache__/
+cache/
+*.html
+*.js
+*.css
+*.json

@@ -2,8 +2,9 @@
 
 from hashlib import sha256
 import json
-from os import mkdir, path
+from os import mkdir, path, unlink
 import re
+from sys import stderr
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as et
 
@@ -12,6 +13,7 @@ from xml.etree import ElementTree as et
 # TODO: cache computed ones in redis (?) and refresh when dirty from fetching
 AGENCIES: dict
 TITLES: dict
+TITLE_VERSIONS = {}
 SLUG_CHECKSUM: dict
 WORD_COUNTS = {}
 
@@ -22,7 +24,8 @@ _WORD_COUNTS_PATH = path.join('cache', 'word_counts.json')
 
 
 if __name__ == '__main__':
-  print('Warming up the cache for eCFR documents.  This may take a while...')
+  print('Warming up the cache for eCFR documents.  This may take a while...',
+        file=stderr)
 
 
 if not path.exists('cache'):
@@ -42,11 +45,14 @@ def _checksum(string: str) -> str:
 
 def _count_words_per_chapter(title_number: int, filename: str):
   for _, elem in et.iterparse(filename):
-    if elem.attrib.get('TYPE', '') == 'CHAPTER':
-      WORD_COUNTS[':'.join((str(title_number), elem.attrib['N']))] = \
+    type_ = elem.attrib.get('TYPE', '')
+    if type_ in ('CHAPTER', 'SUBTITLE'):
+      WORD_COUNTS[':'.join((str(title_number), type_.lower(),
+                            elem.attrib['N']))] = \
           len(re.findall(_WORD_RE, ''.join(elem.itertext())))
 
 
+# retrieves title and version history
 def _maybe_fetch_title(date: str, number: int) -> str:
   try:
     mkdir(path.join('cache', date))
@@ -54,14 +60,20 @@ def _maybe_fetch_title(date: str, number: int) -> str:
     pass
   file = path.join('cache', date, f'title-{number}.xml')
   if not path.exists(file):
+    # delete existing version history since it must have been updated
+    try:
+      unlink(path.join('cache', f'title-{number}.json'))
+    except FileNotFoundError:
+      pass
     if __name__ == '__main__':
-      print(f'Retrieving {file}...', end='')
+      print(f'Retrieving {file}...', end='', file=stderr)
     urlretrieve(_ECFR_API + f'versioner/v1/full/{date}/title-{number}.xml',
                 filename=file)
     if __name__ == '__main__':
-      print('done')
+      print('done.', file=stderr)
     _count_words_per_chapter(number, file)
-  return file
+  versions = _maybe_fetch_to_json(f'versioner/v1/versions/title-{number}.json')
+  return file, versions['content_versions']
 
 
 def _fetch_to_json(endpoint: str) -> dict:
@@ -76,11 +88,16 @@ def _maybe_fetch_to_json(endpoint: str) -> dict:
   file = path.join('cache', endpoint.split('/')[-1])
   try:
     with open(file, 'r') as f:
-      return json.loads(f.read())
-  except FileNotFoundError:
-    urlretrieve(_ECFR_API + endpoint, filename=file)
-    with open(file, 'r') as f:
       return json.load(f)
+  except FileNotFoundError:
+    try:
+      urlretrieve(_ECFR_API + endpoint, filename=file)
+      with open(file, 'r') as f:
+        return json.load(f)
+    except Exception as e:
+      print(endpoint, file=stderr)
+      print(e, file=stderr)
+      raise
 
 
 AGENCIES = _fetch_to_json('admin/v1/agencies.json')['agencies']
@@ -100,21 +117,16 @@ if len(_slugs) != len(set(SLUG_CHECKSUM.values())):
 for title in TITLES:
   if not title['latest_amended_on']:
     continue
-  _maybe_fetch_title(title['latest_amended_on'], title['number'])
+  _, versions = _maybe_fetch_title(title['latest_amended_on'], title['number'])
+  TITLE_VERSIONS[title['number']] = sorted(set([v['date'] for v in versions]),
+                                           reverse=True)
 
 
 with open(_WORD_COUNTS_PATH, 'w') as f:
   json.dump(WORD_COUNTS, f)
 
 
-for agency in AGENCIES:
-  wc = 0
-  for ref in agency['cfr_references']:
-    pass
-  break
-
-
 if __name__ == '__main__':
   keys = [k for k in globals().keys() if 'A' <= k[0] <= 'Z']
-  print('Done!')
-  print(f'import {", ".join(keys)} from this module')
+  print('Done!', file=stderr)
+  print(f'import {", ".join(keys)} from this module', file=stderr)

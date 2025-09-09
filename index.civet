@@ -1,0 +1,32 @@
+'civet autoConst'
+
+selected .= null
+
+make_agency_row = (agency, table, is_child) =>
+  row = table.insertRow -1
+  hash = row.insertCell 0
+  name = row.insertCell 1
+  wc = row.insertCell 2
+  hash.innerHTML = if is_child then ('<span style="color: white;">-</span> '
+                                    + agency['hash']) else agency['hash']
+  name.innerHTML = agency['name']
+  wc.innerHTML = agency['wc']
+
+
+$(document).ready =>
+  $.getJSON 'payload.json', (payload) =>
+    agency_table = $('#agencies')[0]
+    for agency of payload['agencies']
+      make_agency_row agency, agency_table
+      for child of agency['children']
+        make_agency_row child, agency_table, true
+
+    title_table = $('#titles')[0]
+    for title of payload['titles']
+      row = title_table.insertRow -1
+      number = row.insertCell 0
+      name = row.insertCell 1
+      versions = row.insertCell 2
+      number.innerHTML = title['number']
+      name.innerHTML = title['name']
+      versions.innerHTML = title['versions'].join ' '

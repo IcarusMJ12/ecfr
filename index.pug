@@ -1,0 +1,25 @@
+doctype html
+html.dark(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    link(rel='stylesheet' href='./style.css')
+    script(src='jquery-3.7.1.min.js')
+  body
+    .panel
+      table#agencies
+        thead
+          tr
+            th Hash
+            th Agency
+            th Word Count
+        tbody
+    .panel
+      table#titles
+        thead
+          tr
+            th Num
+            th Title
+            th Versions
+        tbody
+    script(src='index.js')

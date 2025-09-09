@@ -1,0 +1,47 @@
+body
+  box-sizing border-box
+  background-color black
+  color white
+  font-family monospace
+  font-size 1.5em
+  white-space nowrap
+
+.panel
+  float left
+  width 40%
+  height 100vh
+  overflow auto
+
+.deselected
+  background-color gray
+
+th
+  font-weight bold
+  text-align start
+
+#agencies
+  width 100%
+  height 800px
+
+  tr
+    cursor pointer
+
+  td:nth-child(1)
+    color cyan
+    margin-right 1em
+    width 0px
+
+  td:nth-child(2)
+    max-width 0px
+    overflow-x hidden
+
+  td:nth-child(3)
+    width 0px
+    text-align end
+
+#titles
+  margin-left 2em
+  td:nth-child(2)
+
+  td:nth-child(3)
+    overflow-x hidden
