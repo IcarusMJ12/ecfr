@@ -1,5 +1,7 @@
 'civet autoConst'
 
+// selecting a row in one of the tables should select corresponding rows in the
+// other
 selected .= false
 agency_title_map = new Map()
 title_agency_map = new Map()
@@ -14,7 +16,7 @@ make_agency_row = (agency, table, is_child) =>
                                     + agency['hash']) else agency['hash']
   name.innerHTML = agency['name']
   wc.innerHTML = agency['wc']
-  agency_title_map[agency['hash']] = agency['cfr_references']
+  agency_title_map.set agency['hash'], agency['cfr_references']
   for cfr of agency['cfr_references']
     key = 't' + cfr['title']
     val = title_agency_map.get(key) or []
@@ -24,18 +26,16 @@ make_agency_row = (agency, table, is_child) =>
 
 $(document).ready =>
   $.getJSON 'payload.json', (payload) =>
-    agencies = payload['agencies']
-    titles = payload['titles']
-
+    // populate agency table and agency to title selection mapping
     agency_table = $('#agencies > tbody')[0]
-    for agency of agencies
+    for agency of payload['agencies']
       make_agency_row agency, agency_table
       for child of agency['children']
         make_agency_row child, agency_table, true
-        agency_title_map[child['hash']] = child['cfr_references']
 
+    // populate title table and title to agency selection mapping
     title_table = $('#titles > tbody')[0]
-    for title of titles
+    for title of payload['titles']
       row = title_table.insertRow -1
       row.id = 't' + title['number']
       number = row.insertCell 0
@@ -46,24 +46,34 @@ $(document).ready =>
       versions.innerHTML = for join version of title['versions']
         `<a target='_blank' href='https://www.ecfr.gov/on/${version}/title-${title["number"]}'>${version}</a> `
 
+    // grey out agencies and non-matching titles on row click
     $('#agencies').on 'click', 'tbody tr', (evt) =>
       if selected and evt.currentTarget.className == ''
-        $('tbody > tr').removeClass('deselected')
+        $('tbody > tr').removeClass 'deselected'
         selected = false
         return
-      $('tbody > tr').addClass('deselected')
+
+      $('tbody > tr').addClass 'deselected'
+      titles = agency_title_map.get evt.currentTarget.id
+      for title of titles
+        $('#t' + title['title']).removeClass 'deselected'
       evt.currentTarget.className = ''
-      console.log evt
-      title_entries = $('#titles > tbody > tr')
       selected = true
 
+    // grey out titles and non-matching agencies on row click
     $('#titles').on 'click', 'tbody tr', (evt) =>
+      // ignore links as they open a new page
       if evt.target.tagName == 'A'
         return
+
       if selected and evt.currentTarget.className == ''
-        $('tbody > tr').removeClass('deselected')
+        $('tbody > tr').removeClass 'deselected'
         selected = false
         return
-      $('tbody > tr').addClass('deselected')
+
+      $('tbody > tr').addClass 'deselected'
+      agencies = title_agency_map.get evt.currentTarget.id
+      for agency of agencies
+        $('#' + agency).removeClass 'deselected'
       evt.currentTarget.className = ''
       selected = true
