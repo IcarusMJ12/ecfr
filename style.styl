@@ -8,23 +8,28 @@ body
 
 .panel
   float left
-  width 40%
   height 100vh
   overflow auto
 
+#agencies-panel
+  width 40%
+
+#titles-panel
+  width 60%
+
 .deselected
-  background-color gray
+  color dimgray
 
 th
   font-weight bold
   text-align start
 
+tr
+  cursor pointer
+
 #agencies
   width 100%
   height 800px
-
-  tr
-    cursor pointer
 
   td:nth-child(1)
     color cyan

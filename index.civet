@@ -1,9 +1,12 @@
 'civet autoConst'
 
-selected .= null
+selected .= false
+agency_title_map = new Map()
+title_agency_map = new Map()
 
 make_agency_row = (agency, table, is_child) =>
   row = table.insertRow -1
+  row.id = agency['hash']
   hash = row.insertCell 0
   name = row.insertCell 1
   wc = row.insertCell 2
@@ -11,22 +14,56 @@ make_agency_row = (agency, table, is_child) =>
                                     + agency['hash']) else agency['hash']
   name.innerHTML = agency['name']
   wc.innerHTML = agency['wc']
+  agency_title_map[agency['hash']] = agency['cfr_references']
+  for cfr of agency['cfr_references']
+    key = 't' + cfr['title']
+    val = title_agency_map.get(key) or []
+    val.push row.id
+    title_agency_map.set key, val
 
 
 $(document).ready =>
   $.getJSON 'payload.json', (payload) =>
-    agency_table = $('#agencies')[0]
-    for agency of payload['agencies']
+    agencies = payload['agencies']
+    titles = payload['titles']
+
+    agency_table = $('#agencies > tbody')[0]
+    for agency of agencies
       make_agency_row agency, agency_table
       for child of agency['children']
         make_agency_row child, agency_table, true
+        agency_title_map[child['hash']] = child['cfr_references']
 
-    title_table = $('#titles')[0]
-    for title of payload['titles']
+    title_table = $('#titles > tbody')[0]
+    for title of titles
       row = title_table.insertRow -1
+      row.id = 't' + title['number']
       number = row.insertCell 0
       name = row.insertCell 1
       versions = row.insertCell 2
       number.innerHTML = title['number']
       name.innerHTML = title['name']
-      versions.innerHTML = title['versions'].join ' '
+      versions.innerHTML = for join version of title['versions']
+        `<a target='_blank' href='https://www.ecfr.gov/on/${version}/title-${title["number"]}'>${version}</a> `
+
+    $('#agencies').on 'click', 'tbody tr', (evt) =>
+      if selected and evt.currentTarget.className == ''
+        $('tbody > tr').removeClass('deselected')
+        selected = false
+        return
+      $('tbody > tr').addClass('deselected')
+      evt.currentTarget.className = ''
+      console.log evt
+      title_entries = $('#titles > tbody > tr')
+      selected = true
+
+    $('#titles').on 'click', 'tbody tr', (evt) =>
+      if evt.target.tagName == 'A'
+        return
+      if selected and evt.currentTarget.className == ''
+        $('tbody > tr').removeClass('deselected')
+        selected = false
+        return
+      $('tbody > tr').addClass('deselected')
+      evt.currentTarget.className = ''
+      selected = true
