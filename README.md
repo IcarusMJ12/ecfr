@@ -6,8 +6,8 @@ candidates whose skills more closely align with our current needs."
 
 So, about that...
 
-Outside of this section of the readme and the
-[assessment.pdf](assignment) converted from docx to pdf, this and the generated
+Outside of this section of the readme, cygwin link typo below, and the
+[assignment](assessment.pdf) converted from docx to pdf, this and the generated
 artefacts were my submission to the Department of Government Efficiency (DOGE)
 for an unspecified software engineering position.  The following may make more
 sense if you read the assignment yourself.
@@ -46,7 +46,7 @@ Charitably, this assessment expects the candidate to be a mind reader that
 can complete it with unstated expectations.  Much less charitably, it is a ploy
 to crowd source actionable metrics for DOGE without compensation, which is in
 violation of the
-[https://www.dol.gov/sites/dolgov/files/WHD/fact-sheets/whdfs13.pdf](Fair Labor Standards Act)
+[Fair Labor Standards Act](https://www.dol.gov/sites/dolgov/files/WHD/fact-sheets/whdfs13.pdf)
 which bases employment on "\[t\]he extent to which the services rendered are an
 integral part of the principal's business."
 Given the unidirectional application of standards unspecified, my
@@ -64,7 +64,7 @@ does not include suffering fools -- or possibly malicious agents -- gladly.
 All generated artefacts are included in the archive.  If you wish to generate
 them yourself, you'll need `bash`, `npm`, and the latest version of `python3`.
 
-If you're on Windows, maybe [https://www.cygwin.com/](Cygwin) can help.
+If you're on Windows, maybe [Cygwin](https://www.cygwin.com/) can help.
 
 It's strongly recommended you then pre-warm the cache by running `./ecfr.py` as
 that will fetch and analyze all the titles, which takes a while.  From then on
